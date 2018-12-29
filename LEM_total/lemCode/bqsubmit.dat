@@ -1,0 +1,36 @@
+
+command=./a.out blah.dat > output.dat
+submitOptions= -q qwork@ms -l walltime=55:00:00
+batchName=case2b
+
+param1 = run = 1:1:5
+
+templateFiles=./blah.dat
+linkFiles = ./a.out cklink tplink input7.dat ic.csv
+
+#Adresse courriel; un message sera envoyé a cette adresse
+#lorsque le calcul sera terminé ou si une erreur survient.
+#E-Mail address. A message will be sent to this address
+#when the job is finished or if an error occurs.
+#emailAddress=hongtsui@live.com
+
+#Command to execute following processing.
+#postBatch=./getCombineResults.py
+
+#Number of jobs running in parallel
+concurrentJobs=5
+##################
+# Job Parameters #
+##################
+
+# Circle radius.  This parameter will replace the token ~~CircleRadius~~.
+#CircleRadius=100000000
+
+# The (min,max) couple successively takes the following specified values.
+# In many cases, we will prefer the 'file' method.
+#param1 = (min,max) = [(1, 125000000), (125000001, 250000000), 
+#(250000001,375000000), (375000001,500000000), (500000001, 625000000), 
+#(625000001,750000000), (750000001,875000000), (875000001,1000000000)];
+
+#file method; We load a file which contains the values to explore.
+#param1 = (min,max) = load values.txt

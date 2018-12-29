@@ -1,0 +1,195 @@
+To compile, simply type:
+ifort PREMIX.f (or whatever PREMIX-xxx version)
+the compiled code will be in 
+a.out
+
+
+*** should take a look at this whole README file! Including the end bits! ***
+
+
+
+Description of files:
+
+6stepic.csv: initial condition file
+blah.dat: it's needed for submitting multiple serial jobs on mp2
+bqsubmit.dat: for submitting the job on mp2 
+  -- I would suggest just submitting one job in each directory --> safer
+BTriplet.f: triplet map source code
+case2B_ic.csv: more initial condition files
+cklib.f: chemkin library
+cklink: chemkin link file, thermo
+fort.911/921: not important
+htlib.f: more source codes, particularly chemkin methods that I edited
+i1mach.f: required library
+ic.csv: actual initial condition input (this file is needed if you are reading in the 
+        initial conditions)
+interp_ic.m: a matlab routine to interpolate the initial condition data to the correct
+             coordinates (in x position)
+math.f: math library
+mwtht.d: molecular weights, not really important. It's just an output file to double 
+         check things
+newic.csv: more ic files (I'm paranoid and keep multi ic files under different names)
+PREMIX7-camb.f: the source code
+pv.csv: progress variable data -- this is where the data is written
+tplink: chemkin link file, transport
+tranlib.f: chemkin transport library
+x.csv: x-coordinates in the domain
+z.dat: this just prints what's read into the code, for double-checking purpose
+
+
+
+
+Things that need to be considered before using the code:
+a) Turbulent Reynolds number
+b) Integral length scale
+c) Kolmogorov length scale
+
+
+
+If using the same mechanism as me, nothing needs to be changed, of course.
+
+How to actually start the code, 2 ways:
+
+A) If there's an existing initial solution, then it's easy, just read it in!
+--> Required input files:
+   ic.csv (initial conditions)
+   x.csv  (x-coordinate information)
+   input7.dat (all other parameters)
+   1) 'tend', doesn't really matter, just set it to something big
+      -- now the simulation terminates on the number of realisations instead of time
+      -- so 'tend' is somewhat obsolete
+   2) ts (timestep), 2e-9 seems to work for THIS mechanism, may need to adjust for another
+   3) overall turbulent Reynolds number
+   4/5) domain length, pressure --> set to correct values
+   6/7) u, t are ignored if solution is READ (parameter 12)
+   8/10/11) several UNUSED parameters now: cp, D, lambda (now they're calculated)
+   9) nu, can use properties of the mixture of at a progress variable of 0.5?
+      -- though it's not sensitive, so I just used air @ 300K
+      -- but it's easier to defend with properties at a progress variable of 0.5
+   12) READ INPUT: 1 = true, 0 = false
+   13) TRIPLET MAP: triplet maps on or off 
+   14) WRITE DATA @ 10% intervals: this is more for case (B) below
+   15) OVERWRITE INITIAL CONDITIONS: it writes the updated realisation's data to the 
+       initial condition file
+       -- typically yes, unless you think the simulation is highly unstable, in 
+          which case it may not be a good idea to overwrite the good initial 
+          condition
+       -- always keep a backup of the initial conditions under a different name!
+   16) FUEL CORRECTION: adjusts inlet conditions (velocity) to make sure flame stays 
+       inside the domain
+       -- typically yes
+   17) TEMPERATURE CORRECTION: this is more for case (B) below
+   18) GRAC: this parameter allows you to manually adjust the reaction rates by a 
+       constant factor
+       -- keep it at 1.0 if unsure or mechanism requires no tuning
+   19) Where is CH4 located (the order) within the mechanism
+       -- I used a double to track it (can't remember why)...so just include the '.d0'
+   20-29) Initial species mass fractions: this is more for case (B) below
+       -- this also means if your mechanism has more or less species, these parameters 
+          will need to be adjusted (add additional, etc.)
+   30) Integral length: in cm
+   31) Number of realisations to record: as the name implies
+   32) Number of timesteps per realisation (each realisation @ 1/100 LETOT)
+       -- LETOT = large eddy turnover time
+       -- manually calculate the value of LETOT for your problem, then divide it by 100
+       -- divide this number (above) with the timestep size
+   33) STOP READING IDENTIFIER: this just tells the code to stop reading the input7.dat file
+       -- aka, it marks the last line of data
+      
+   
+   
+
+B) If there are no existing solutions, then you will need to first calculate one!
+   Conceptually: The idea is to first calculate a laminar flame solution, then 
+   later use it as the initial condition for the LEM code (case A above). How?! 
+   Well, we will need the flame to auto-ignite using elevated temperatures (this 
+   requires some balancing, but only needs to be done once)
+--> Required input files:
+   ic.csv (initial conditions)
+   x.csv  (x-coordinate	information) [I cannot remember if this is needed]
+   input7.dat (all other parameters)
+
+   1) 'tend', doesn't really matter, just set it to something big
+      -- now the simulation terminates on the number of realisations instead of time
+      -- so 'tend' is somewhat obsolete
+   2) ts (timestep), 2e-9 seems to work for THIS mechanism, may need to adjust for another
+   3) overall turbulent Reynolds number (doesn't matter for the laminar flame initial 
+      condition, we will turn the triplet map off anyway)
+   4/5) domain length, pressure --> set to correct values
+   6) u: inlet velocity, need this to be high, perhaps around 10x the laminar flame speed 
+      of your fuel. The reason is we want to make sure the flame doesn't burn all the 
+      way to the inlet when it auto ignites!
+   7) t: set it to something high, high enough for auto-ignition to occur
+      -- 1300K seems to be fine for methane
+      -- if it's too high, it may be hard to capture the laminar flame in the domain
+      -- if it's too low, it will take forever to auto-ignite
+   8/10/11) several UNUSED parameters now: cp, D, lambda (now they're calculated)
+   9) nu, can use properties of the mixture of at a progress variable of 0.5?
+      -- though it's not sensitive, so I just used air @ 300K
+      -- but it's easier to defend with properties at a progress variable of 0.5
+   12) READ INPUT: 0 (calculating initial solution)
+   13) TRIPLET MAP: 0
+       -- off, just want a laminar flame
+   14) WRITE DATA @ 10% intervals: 1
+   15) OVERWRITE INITIAL CONDITIONS: 1
+   16) FUEL CORRECTION: 1
+       -- adjusts inlet conditions (velocity) to make sure flame stays 
+          inside the domain
+       -- will need to take a look at CFUEL subroutine in PREMIX.f to see how it works
+   17) TEMPERATURE CORRECTION: 1
+       -- the code will automatically adjust the inlet temperature from (7) down to 294K
+       -- take a look at CTEMP subroutine in PREMIX.f to change the temperature settings
+   18) GRAC: this parameter allows you to manually adjust the reaction rates by a constant 
+       factor
+       -- keep it at 1.0	if unsure or mechanism requires	no tuning
+   19) Where is CH4 located (the order) within the mechanism
+       -- I used a double to track it...so just include the '.d0'
+   20-29) Initial species mass fractions: this is more for case	(B) below
+      -- this also means if your mechanism has more or less species, these parameters 
+         will need to be adjusted
+   30) Integral	length:	in cm
+   31) Number of realisations to record: can just set it to 1
+   32) Number of timesteps per realisation (each realisation @ 1/100 LETOT):
+       -- set this 'time' to the time you think it will take for the flame to auto-ignite
+       -- will require some fiddling, especially with a new mechanism
+       -- eg: if you think it will take 0.001s (just as a random example), then just take 
+          0.001s / (timestep size) --> this will give you the number of timesteps per 
+          auto-ignition.
+   33) STOP READING IDENTIFIER: this just tells the code to stop reading the input7.dat	
+       file
+       -- aka, it marks the last line of data
+
+*** This step is tricky, email me whenever! ***
+The other possible method is to get a laminar flame from FlameMaster or Cantera 
+first, then interpolate the solution to the necessary x-coordinates. But I haven't 
+had too much trouble getting a laminar flame using this auto-ignition technique
+(must say again that it takes some fiddling!)
+
+
+
+
+If mechanism/turbulence parameters are to be changed, need to edit some items in 
+the PREMIX.f code:
+1)       parameter(nspc=10,nspcm1=nspc-1,
+     1          lrckwk=227,lickwk=71,lcckwk=14,
+     2          lenimc=42 ,lenrmc=2300)
+  -- need to change these to the correct number of species
+  -- need to change these to the correct chemkin requirements
+
+2) parameter(nc=2121,ncp1=nc+1,ncm1=nc-1) !nc = number of cells                           
+   -- number of cells in the domain
+   -- calculated manually according to length of domain and Kolmogorov length
+3) params(33) 
+   -- need to be the number of items in the input7.dat file
+   -- if there are more species, then this number has to increase
+4) Looking at subroutine INIT_LEM in PREMIX.f, there are 2 things to be careful about:
+   a) C_lambda, could be different than 15.0, but this is the recommended value 
+      -- page 70 of my thesis
+   b) It just turns out that the eta_K value is 1.0 (this is the recommended value 
+      from source 148 on page 70 of my thesis). If eta_K is not 1.0, then PDFA and 
+      PDFB will neeed to be modified in this subroutine!
+
+
+
+
+Once we have all the data in pv.csv, then we can move onto building the PDF!

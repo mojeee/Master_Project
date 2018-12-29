@@ -1,0 +1,68 @@
+Input parameters
+tend (s)     -1   840.d-5
+24.d-5
+ts (s)       -2
+2.d-9
+turbulent Reynolds number -3
+500.d0
+dom (cm)      -4
+1.d0
+domain pressure (dynes/cm2)    -5
+1013250.d0
+u (cm/s)    -6 0.2139d0
+200.d0
+t (K)      -7
+1300.d0
+cp [UNUSED now] (erg/g-K) - air @ 1700K  -8
+1.25d7
+nu (cm2/s ) - air @ 300K     -9
+1.568d-1
+D [UNUSED now] -air/N2ish @ 1700K  -10
+2.7d-4 
+lambda [UNUSED now] (erg/cm-K-s) -air @ 1700K   -11
+1.13d4
+READ INPUT - 12 [0 - OFF, 1 - ON, FOR 12-17]
+1
+TRIPLET MAP - 13
+1
+WRITE DATA @ 10% INTERVALS - 14
+0
+OVERWRITE INITIAL CONDITIONS - 15
+1
+FUEL CORRECTION - 16
+1
+TEMPERATURE CORRECTION - 17
+0
+GFAC (REACTION SPEED MULTIPLIER) -18 0.917 < x < 0.917
+0.9175d0
+FUEL ARRAY LOCATION - 19
+7.d0
+H2  - 20
+0.d0
+H   - 21
+0.d0
+O   - 22
+0.d0
+O2  - 23
+0.222871d0
+OH  - 24
+0.d0
+H20 - 25
+0.d0
+CH4 - 26
+0.040785d0
+CO  - 27
+0.d0
+CO2 - 28 
+0.d0
+N2  - 29
+0.736344d0
+Integral length (cm) - 30
+0.2992
+Number of realizations to record - 31
+400
+Number of timesteps per realization (to achieve 1/100th LETOT) - 32
+5710
+STOP READING IDENTIFIER - 31
+9999.d0
+

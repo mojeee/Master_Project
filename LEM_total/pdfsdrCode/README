@@ -1,0 +1,64 @@
+
+
+
+
+The PDF-building code is much easier than the LEM code.
+
+Some comments to consider:
+1) The binning is taken from Jin's 2008 paper; there are 51 bins
+   -- if this is not desired, can just interpolate later using Matlab
+2)       PARAMETER(N = 2122, NBIN = 51, NSIM = 3500,
+     1    DELTA_CUTOFF = 100, BIG = 400000, SPACE = 2,
+     2    NTHREADS = 24)
+   -- N = number of cells in the realisations, need to change to your case
+   -- NBIN = 51 here
+   -- NSIM = number of realisations
+   -- DELTA_CUTOFF, BIG and SPACE may need to be changed, but typically they are fine
+      -> they have to do with the boundary truncations, mainly a memory problem
+   -- NTHREADS = number of processors to use in parallel
+3) the input data file must be named interpedc.csv
+4) Can take a look at NORMDATA to see exactly how you want to normalise the data
+   -- different calculation for temperature, CO2, etc.
+   --> maybe you want to use the CO2_EQ value to normalise the data, or 
+       max CO2 value in this realisation. It's your choice and can be changed in 
+       this subroutine
+
+
+to compile:
+just type make
+and the program is called:
+go
+
+
+
+
+The SDR-building code:
+
+ifort -O3 gradc.f (or no O3, just an optimiser)
+
+it will take the LEM data (interpc.csv) and calculate the gradients.
+The output is the average gradient of the progress variable.
+--> which means the Diffusion coefficient will need to be multiplied into the 
+    output file after the fact since:
+    the conditional SDR = (diffusion coefficient)*(grad c)*(grad c)
+
+Things to consider:
+1) The binning is now 50 evenly spaced bins
+2)     PARAMETER(N = 2122, NBIN = 50, NSIM = 3500)
+   -- N	  = number of cells in the realisations, need to change to your case
+   -- NBIN = 50 here
+   -- NSIM = number of realisations
+3) the input data file must be named interpedc.csv
+4) Can take a look at NORMDATA to see exactly how you want to normalise the data
+   -- different calculation for temperature, CO2, etc.
+   --> maybe you want to use the CO2_EQ value to normalise the data, or 
+       max CO2 value in	 this realisation. It's your choice and can be changed in 
+       this subroutine
+
+
+Once you have the conditional SDR, an inner product with the PDF table 
+is required to get the unconditional SDR. The unconditional SDR is the number 
+that would need to be tabulated at each mean and variance combination!
+
+I may have several Matlab scripts for post-processing the PDF/SDR into OpenFOAM 
+formats.

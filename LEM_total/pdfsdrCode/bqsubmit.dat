@@ -1,0 +1,7 @@
+# MULTI PROCESSOR
+command=./go > log
+submitOptions= -q qwork@mp2 -l nodes=1:ppn=24 -l walltime=02:00:00
+
+#emailAddress=hongtsui@live.com
+
+batchName=lempdf2b

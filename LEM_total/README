@@ -1,0 +1,30 @@
+
+Hong -- 2017/01/19
+
+This package will allow one to create the LEM PDF from scratch.
+There are three steps:
+
+1) Run the LEM simulations to collect enough temperature or CO2 realisations 
+   -- will need to edit code depending on which, right now it's set to CO2
+   -- this is the hardest part of the process, may need some time to learn it...
+   -- everything is located in the lemCode directory
+   -- further README file located in the lemCode directory to explain everything
+
+2) Build LEM PDF / "SDR" using those realisations
+   -- this is easy, just run the fortran scripts
+   -- the PDF is built from bmp10.f
+   -- the "SDR" is built from gradc.f
+      --> note, only the conditional gradients are provided by gradc.f,
+          not the SDR!
+      --> will need to use the conditional gradients to build the SDR at step 3
+      --> The reason is that the PDF and conditional gradients are general 
+          to all progress variables, whereas the SDR needs the diffusion 
+          coefficient or thermal diffusivity, so I decided to split it.
+   -- further README file located in the pdfsdrCode directory to explain everything
+
+
+3) Convert the LEM PDF to Graham's CSEFoam format
+   -- this is also easy, just give the script the appropriate files
+   -- further information located in the header of the script to explain everything
+
+And hopefully that's that!

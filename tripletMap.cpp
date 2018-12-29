@@ -6,15 +6,19 @@ end time :
 */
 
 #include<tripletMap.h>
+#include<math.h>
+#include<chemistry0d.h>
+#include<grid.h>
 
-class tripletMap:public grid ,public flamesolver 
+class tripletMap:public grid ,public flamesolver , public chemistry0d 
 {
 
 
 	public:
-
-		nspc=10;
-		nc=2121;
+		// number of species get from flame solver
+		nspc=nSpec;
+		// number of grid point get from grid
+		nc=nPoints;
 		ncp1=nc+1;
 		Dx=0.1 // cm ;
 		XLint=0.2992;
@@ -22,13 +26,15 @@ class tripletMap:public grid ,public flamesolver
 		XLk=(XLint)/(pow(Re,0.75));
 		PDFA=((pow(XLint,double(5/3)))*(pow(XLk,double(-5/3))))/(pow((XLint-XLk),double(5/3))-1.0);
 		PDFB=-(pow(XLint,double(5/3)))/(pow((XLint/XLk),double(5/3))-1.0);
-		Dom=101325;
+		// get pressure from chemistry0d
+		Dom = pressure;
 		ncm1=nc-1;
+		// number of triplet map in each realization
 		MTS=1;
 		// random number
 		rand=0.0;
 		// eddy length
-		L=0.0;
+		L=0;
 		// starting point
 		M=0;
 }
@@ -72,17 +78,28 @@ void tripletMap::TM()
 			M=int(rand*nc);
 			eddylength();
 		}
-	
-		// tripletmap on temperature
-		BTriplet(T);
+		
+		for(int j=1,j<nc,j++)
+                {
+                        double Temp(nPoints);
+                        Temp(j)=T(j);
+                }
+                        Btriplet(double& Temp);
+                for(j=1,j<nc,j++)
+                {
+                        T(j)=Temp(j);
+                }
+                        
+		
 		// tripletmap on mass fraction
 		for (int k=1,k<nspc,k++)
 		{
 			for(int j=1,j<ncp1,j++)
 			{
+				double yy(nPoints);
 				yy(j)=Y(k,j);
 			}
-			Btriplet(yy);
+			Btriplet(double& yy);
 			for(j=2,j<nc,j++)
 			{
 				Y(k,j)=yy(j);
@@ -106,7 +123,7 @@ void tripletMap::eddyLength()
 	// make sure eddy is divisible by 3
 	if((NSize%3)==0)
 	{
-		Nlength=NSize;
+		int Nlength=NSize;
 	}
 	else if ((NSize%3)==1)
 	{
@@ -116,6 +133,7 @@ void tripletMap::eddyLength()
 	{
 		Nlength=NSize+1;
 	}
+	L=Nlength;
 
 }
 
